@@ -64,6 +64,14 @@ module "alb" {
     certificate_arn    = "${data.aws_acm_certificate.certificate.arn}"
 }
 
+resource "aws_ecs_cluster" "main" {
+    name = "Fargate"
+
+    lifecycle {
+        create_before_destroy = true
+    }
+}
+
 output "alb_id" {
     value = "${module.alb.alb_id}"
 }
