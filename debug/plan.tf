@@ -72,30 +72,8 @@ resource "aws_ecs_cluster" "main" {
     }
 }
 
-output "alb_id" {
-    value = "${module.alb.alb_id}"
-}
-
-output "alb_arn" {
-    value = "${module.alb.alb_arn}"
-}
-
-output "alb_arn_suffix" {
-    value = "${module.alb.alb_arn_suffix}"
-}
-
-output "alb_dns_name" {
-    value = "${module.alb.alb_dns_name}"
-}
-
-output "alb_zone_id" {
-    value = "${module.alb.alb_zone_id}"
-}
-
-output "secure_listener_arn" {
-    value = "${module.alb.secure_listener_arn}"
-}
-
-output "insecure_listener_arn" {
-    value = "${module.alb.insecure_listener_arn}"
+resource "aws_ecs_task_definition" "definition" {
+    family                = "Nginx"
+    container_definitions = "${file("debug/files/task-definition.json")}"
+    network_mode          = "bridge"
 }
