@@ -1,5 +1,5 @@
 terraform {
-    required_version = ">= 0.10.7"
+    required_version = ">= 0.11.1"
     backend "s3" {}
 }
 
@@ -8,9 +8,33 @@ variable "region" {
     default = "us-west-2"
 }
 
+variable "project" {
+    type = "string"
+    default = "Fargate"
+}
+
+variable "creator" {
+    type = "string"
+    default = "kurron@jvmguy.com"
+}
+
+variable "environment" {
+    type = "string"
+    default = "sandbox"
+}
+
 variable "domain_name" {
     type = "string"
     default = "transparent.engineering"
+}
+
+variable "vpc_id" {
+    type = "string"
+    default = "vpc-ff217399"
+}
+
+variable "subnet_ids" {
+    default = ["subnet-568ee830","subnet-4a33b402","subnet-ac5f72f7"]
 }
 
 provider "aws" {
@@ -22,38 +46,20 @@ data "aws_acm_certificate" "certificate" {
     statuses = ["ISSUED"]
 }
 
-data "terraform_remote_state" "vpc" {
-    backend = "s3"
-    config {
-        bucket = "transparent-test-terraform-state"
-        key    = "us-west-2/debug/networking/vpc/terraform.tfstate"
-        region = "us-east-1"
-    }
-}
-
-data "terraform_remote_state" "security-groups" {
-    backend = "s3"
-    config {
-        bucket = "transparent-test-terraform-state"
-        key    = "us-west-2/debug/networking/security-groups/terraform.tfstate"
-        region = "us-east-1"
-    }
-}
-
 module "alb" {
-    source = "../"
+    source = "kurron/alb/aws"
 
-    region             = "us-west-2"
-    name               = "Ultron"
-    project            = "Debug"
+    region             = "${var.region}"
+    name               = "Fargate"
+    project            = "${var.project}"
     purpose            = "Fronts Docker containers"
-    creator            = "kurron@jvmguy.com"
-    environment        = "development"
+    creator            = "${var.creator}"
+    environment        = "${var.environment}"
     freetext           = "No notes at this time."
     internal           = "No"
-    security_group_ids = ["${data.terraform_remote_state.security-groups.alb_id}"]
-    subnet_ids         = "${data.terraform_remote_state.vpc.public_subnet_ids}"
-    vpc_id             = "${data.terraform_remote_state.vpc.vpc_id}"
+    security_group_ids = ["sg-18d8b765"]
+    subnet_ids         = "${var.subnet_ids}"
+    vpc_id             = "${var.vpc_id}"
     ssl_policy         = "ELBSecurityPolicy-TLS-1-2-2017-01"
     certificate_arn    = "${data.aws_acm_certificate.certificate.arn}"
 }
